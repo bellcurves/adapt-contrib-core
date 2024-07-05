@@ -140,6 +140,7 @@ class Data extends AdaptCollection {
       logging.error(error);
       return;
     }
+    allFileData = this.filterScoContentData(manifest, allFileData);
     // Flatten all file data into a single array of model data
     const allModelData = allFileData.reduce((result, fileData) => {
       if (Array.isArray(fileData)) {
@@ -181,6 +182,95 @@ class Data extends AdaptCollection {
     this.trigger('reset');
     this.trigger('loaded');
     await wait.queue();
+  }
+
+  /**
+   * Filter visible book content based on the SCO_CONTENT_ID
+   * @param manifest
+   * @param allFileData
+   * @returns {*}
+   */
+  filterScoContentData(manifest, allFileData) {
+    let contentId;
+
+    if (typeof window.SCO_CONTENT_ID !== 'undefined' && window.SCO_CONTENT_ID !== '') {
+      contentId = window.SCO_CONTENT_ID;
+    } else {
+      return allFileData;
+    }
+
+    const contentObjectsIndex = manifest.indexOf('contentObjects.json');
+    const articlesIndex = manifest.indexOf('articles.json');
+    const blocksIndex = manifest.indexOf('blocks.json');
+    const componentsIndex = manifest.indexOf('components.json');
+    const contentObjects = JSON.parse(JSON.stringify(allFileData[contentObjectsIndex]));
+    const articles = JSON.parse(JSON.stringify(allFileData[articlesIndex]));
+    const blocks = JSON.parse(JSON.stringify(allFileData[blocksIndex]));
+    const components = JSON.parse(JSON.stringify(allFileData[componentsIndex]));
+    const rootContentObject = contentObjects.find(contentObject => contentObject._id === contentId);
+    const newContentObjects = [rootContentObject];
+    const childrenObjects = this.loopScoContentData(contentObjects, rootContentObject._id);
+    const usedIDs = [];
+
+    allFileData[contentObjectsIndex] = childrenObjects !== null ? newContentObjects.concat(childrenObjects) : newContentObjects;
+    for (const contentObject of allFileData[contentObjectsIndex]) {
+      usedIDs.push(contentObject._id);
+    }
+
+    allFileData[articlesIndex] = this.clearScoContentData(usedIDs, articles);
+    for (const article of allFileData[articlesIndex]) {
+      usedIDs.push(article._id);
+    }
+
+    allFileData[blocksIndex] = this.clearScoContentData(usedIDs, blocks);
+    for (const block of allFileData[blocksIndex]) {
+      usedIDs.push(block._id);
+    }
+
+    allFileData[componentsIndex] = this.clearScoContentData(usedIDs, components);
+
+    return allFileData;
+  }
+
+  /**
+   * @param contentObjects
+   * @param contentObjectTarget
+   * @returns {*[]|null}
+   */
+  loopScoContentData(contentObjects, contentObjectTarget) {
+    let objects = [];
+
+    for (const object of contentObjects) {
+      if (object._parentId === contentObjectTarget) {
+        objects.push(object);
+        const childrenObjects = this.loopScoContentData(contentObjects, object._id);
+        if (childrenObjects !== null) {
+          objects = objects.concat(childrenObjects);
+        }
+      }
+    }
+    return objects.length > 0 ? objects : null;
+  }
+
+  /**
+   * @param usedIDs
+   * @param data
+   * @returns {*[]|null}
+   */
+  clearScoContentData(usedIDs, data) {
+    let newData = [];
+
+    for (const item of data) {
+      if (usedIDs.includes(item._parentId)) {
+        newData.push(item);
+        const subItems = this.clearScoContentData([item._id], data);
+        if (subItems !== null) {
+          newData = newData.concat(subItems);
+        }
+      }
+    }
+
+    return newData.length > 0 ? newData : null;
   }
 
   async triggerDataLoaded() {
