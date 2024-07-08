@@ -208,6 +208,7 @@ class Data extends AdaptCollection {
     const blocks = JSON.parse(JSON.stringify(allFileData[blocksIndex]));
     const components = JSON.parse(JSON.stringify(allFileData[componentsIndex]));
     const rootContentObject = contentObjects.find(contentObject => contentObject._id === contentId);
+    rootContentObject._parentId = 'course';
     const newContentObjects = [rootContentObject];
     const childrenObjects = this.loopScoContentData(contentObjects, rootContentObject._id);
     const usedIDs = [];
