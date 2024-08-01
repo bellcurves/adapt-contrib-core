@@ -215,7 +215,13 @@ class QuestionView extends ComponentView {
     // Used to trigger an event so plugins can display feedback
     // Do this before updating the buttons so that the focus can be
     // shifted immediately
-    this.showFeedback();
+    if (typeof this.model.isCorrect !== 'undefined') {
+      if (!this.model.isCorrect()) {
+        this.showFeedback();
+      }
+    } else {
+      this.showFeedback();
+    }
 
     // Force height re-calculations before the submit button
     // becomes disabled.
