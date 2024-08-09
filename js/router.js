@@ -587,8 +587,9 @@ class Router extends Backbone.Router {
     this.listenTo(Adapt.config, 'change:_activeLanguage', this.onLanguageChange);
   }
 
-  onLanguageChange() {
-    this.updateLocation(null, null, null, null)
+  onLanguageChange() {    
+    if (!this.rootModel) { return; }
+    this.updateLocation(null, null, null, null);
   }
 
 }
