@@ -85,7 +85,7 @@ export function compile(template, ...args) {
     newDiv.remove();
   }
 
-  const output = Handlebars.compile(template)(...args);
+  let output = Handlebars.compile(template)(...args);
 
   // Resolve MathJax LaTeX conflict with Handlebars
   // Decode LaTeX markup from base64
