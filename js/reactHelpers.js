@@ -68,7 +68,40 @@ export function html(html) {
  * @param {...any} args Template arguments
  */
 export function compile(template, ...args) {
+
+  // Resolve MathJax LaTeX conflict with Handlebars
+  // Encode LaTeX markup to base64
+  const isMathTex = template.includes('math-tex');
+  if (isMathTex) {
+    const newDiv = document.createElement('div');
+    newDiv.innerHTML = template;
+    const formulas = newDiv.querySelectorAll('.math-tex');
+    for (const formula of formulas) {
+      try {
+        formula.innerHTML = btoa(encodeURIComponent(formula.innerHTML));
+      } catch (error) { console.log('MathTex Error:', error); }
+    }
+    template = newDiv.innerHTML;
+    newDiv.remove();
+  }
+
   const output = Handlebars.compile(template)(...args);
+
+  // Resolve MathJax LaTeX conflict with Handlebars
+  // Decode LaTeX markup from base64
+  if (isMathTex) {
+    const newDiv = document.createElement('div');
+    newDiv.innerHTML = output;
+    const formulas = newDiv.querySelectorAll('.math-tex');
+    for (const formula of formulas) {
+      try {
+        formula.innerHTML = decodeURIComponent(atob(formula.innerHTML));
+      } catch (error) { console.log('MathTex Error:', error); }
+    }
+    output = newDiv.innerHTML;
+    newDiv.remove();
+  }
+
   return output;
 };
 
