@@ -125,8 +125,12 @@ export default class ButtonsView extends Backbone.View {
     const ariaLabel = this.model.get('_buttons')['_' + propertyName].ariaLabel;
     const buttonText = this.model.get('_buttons')['_' + propertyName].buttonText;
 
-    // Enable the button, make accessible and update aria labels and text
-    a11y.toggleEnabled($buttonsAction, this.model.get('_canSubmit'));
+    if (buttonState === BUTTON_STATE.SHOW_CORRECT_ANSWER || buttonState === BUTTON_STATE.HIDE_CORRECT_ANSWER) {
+      a11y.toggleEnabled($buttonsAction, true);
+    } else {
+      // Enable the button, make accessible and update aria labels and text
+      a11y.toggleEnabled($buttonsAction, this.model.get('_canSubmit'));
+    }
     $buttonsAction.html(buttonText).attr('aria-label', ariaLabel);
   }
 
