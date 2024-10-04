@@ -132,9 +132,17 @@ class Data extends AdaptCollection {
       logging.error(`Manifest path '${manifestPath} not found. Using traditional files: ${manifest.join(', ')}`);
     }
     let allFileData;
+
+    // Version controll for data assets
+    let ver = '';
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('ver') && params.get('ver').trim().length > 0) {
+      ver = '?ver=' + params.get('ver').trim();
+    }
+
     try {
       allFileData = await Promise.all(manifest.map(filePath => {
-        return this.getJSON(`${languagePath}${filePath}`);
+        return this.getJSON(`${languagePath}${filePath}${ver}`);
       }));
     } catch (error) {
       logging.error(error);
